@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pastbin-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: pastbin
+  template:
+    metadata:
+      labels:
+        app: pastbin
+    spec:
+      containers:
+        - name: pastbin
+          image: pastbin:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_DATASOURCE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: pastbin-config
+                  key: spring.datasource.url
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: pastbin-config
+                  key: spring.datasource.username
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: pastbin-config
+                  key: spring.datasource.password
+            - name: SPRING_REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: pastbin-config
+                  key: spring.redis.host
+            - name: SPRING_REDIS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: pastbin-config
+                  key: spring.redis.port

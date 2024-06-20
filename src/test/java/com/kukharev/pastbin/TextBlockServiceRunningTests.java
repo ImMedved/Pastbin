@@ -15,11 +15,12 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class TextBlockServiceTests {
+public class TextBlockServiceRunningTests {
 
     @Mock
     private TextBlockRepository textBlockRepository;
@@ -43,6 +44,11 @@ public class TextBlockServiceTests {
 
         assertEquals(hash, resultHash);
         verify(textBlockRepository, times(1)).save(any(TextBlock.class));
+
+        TextBlock savedTextBlock = (TextBlock) verify(textBlockRepository, times(1)).save(any(TextBlock.class));
+        assertEquals(text, savedTextBlock.getText());
+        assertEquals(hash, savedTextBlock.getHash());
+        //assertTrue(savedTextBlock.getExpiryTime().isAfter(LocalDateTime.now()));
     }
 
     @Test
@@ -68,4 +74,16 @@ public class TextBlockServiceTests {
 
         assertThrows(ResourceNotFoundException.class, () -> textBlockService.getTextBlock(hash));
     }
+
+    @Test
+    public void testHashGeneration() {
+        String text = "Test text";
+        long timestamp = System.currentTimeMillis();
+        String hashInput = text + timestamp;
+
+        String generatedHash = hashGeneratorService.generateHash(hashInput);
+        assertNotNull(generatedHash);
+        assertEquals(8, generatedHash.length());
+    }
 }
+

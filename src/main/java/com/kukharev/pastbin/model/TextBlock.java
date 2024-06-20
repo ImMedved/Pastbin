@@ -29,5 +29,13 @@ public class TextBlock {
     public void setHash(String hash) {
     }
 
+    public String getHash() {
+        return null;
+    }
+
+    public String getText() {
+        return null;
+    }
+
     // Getters and setters
 }

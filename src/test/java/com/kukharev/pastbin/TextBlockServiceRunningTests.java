@@ -6,6 +6,7 @@ import com.kukharev.pastbin.exception.ResourceNotFoundException;
 import com.kukharev.pastbin.service.HashGeneratorService;
 import com.kukharev.pastbin.service.TextBlockService;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -34,22 +35,24 @@ public class TextBlockServiceRunningTests {
     @Test
     public void testCreateTextBlock() {
         String text = "Test text";
-        long expiryTime = 60L;
         String hash = "testHash";
 
         when(hashGeneratorService.generateHash(anyString())).thenReturn(hash);
-        when(textBlockRepository.save(any(TextBlock.class))).thenAnswer(i -> i.getArguments()[0]);
 
-        String resultHash = textBlockService.createTextBlock(text, expiryTime);
+        // Capture the argument passed to save method
+        ArgumentCaptor<TextBlock> captor = ArgumentCaptor.forClass(TextBlock.class);
+
+        String resultHash = textBlockService.createTextBlock(text);
 
         assertEquals(hash, resultHash);
-        verify(textBlockRepository, times(1)).save(any(TextBlock.class));
+        verify(textBlockRepository, times(1)).save(captor.capture());  // Capture the argument
 
-        TextBlock savedTextBlock = (TextBlock) verify(textBlockRepository, times(1)).save(any(TextBlock.class));
+        TextBlock savedTextBlock = captor.getValue();  // Retrieve the captured value
+        assertNotNull(savedTextBlock);  // Ensure savedTextBlock is not null
         assertEquals(text, savedTextBlock.getText());
         assertEquals(hash, savedTextBlock.getHash());
-        //assertTrue(savedTextBlock.getExpiryTime().isAfter(LocalDateTime.now()));
     }
+
 
     @Test
     public void testGetTextBlock() {
@@ -73,17 +76,6 @@ public class TextBlockServiceRunningTests {
         when(textBlockRepository.findByHash(hash)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> textBlockService.getTextBlock(hash));
-    }
-
-    @Test
-    public void testHashGeneration() {
-        String text = "Test text";
-        long timestamp = System.currentTimeMillis();
-        String hashInput = text + timestamp;
-
-        String generatedHash = hashGeneratorService.generateHash(hashInput);
-        assertNotNull(generatedHash);
-        assertEquals(8, generatedHash.length());
     }
 }
 

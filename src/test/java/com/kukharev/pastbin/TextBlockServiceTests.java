@@ -5,6 +5,7 @@ import com.kukharev.pastbin.repository.TextBlockRepository;
 import com.kukharev.pastbin.exception.ResourceNotFoundException;
 import com.kukharev.pastbin.service.HashGeneratorService;
 import com.kukharev.pastbin.service.TextBlockService;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -30,22 +31,21 @@ public class TextBlockServiceTests {
     @InjectMocks
     private TextBlockService textBlockService;
 
-    @Test
+    @RepeatedTest(10)
     public void testCreateTextBlock() {
         String text = "Test text";
-        long expiryTime = 60L;
         String hash = "testHash";
 
         when(hashGeneratorService.generateHash(anyString())).thenReturn(hash);
         when(textBlockRepository.save(any(TextBlock.class))).thenAnswer(i -> i.getArguments()[0]);
 
-        String resultHash = textBlockService.createTextBlock(text, expiryTime);
+        String resultHash = textBlockService.createTextBlock(text);
 
         assertEquals(hash, resultHash);
         verify(textBlockRepository, times(1)).save(any(TextBlock.class));
     }
 
-    @Test
+    @RepeatedTest(10)
     public void testGetTextBlock() {
         String hash = "testHash";
         TextBlock textBlock = new TextBlock();
@@ -60,7 +60,7 @@ public class TextBlockServiceTests {
         assertEquals("Test text", result.getText());
     }
 
-    @Test
+    @RepeatedTest(10)
     public void testGetTextBlockNotFound() {
         String hash = "nonExistentHash";
 

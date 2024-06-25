@@ -1,54 +1,84 @@
 package com.kukharev.pastbin;
 
+import com.kukharev.pastbin.controller.TextBlockController;
 import com.kukharev.pastbin.controller.TextBlockRequest;
 import com.kukharev.pastbin.model.TextBlock;
 import com.kukharev.pastbin.service.TextBlockService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.*;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest
+@ExtendWith(MockitoExtension.class)
 public class TextBlockControllerTests {
 
-    @Autowired
-    private MockMvc mockMvc;
+    @InjectMocks
+    private TextBlockController textBlockController;
 
-    @MockBean
+    @Mock
     private TextBlockService textBlockService;
 
-    @Test
-    public void createTextBlock() throws Exception {
-        TextBlockRequest request = new TextBlockRequest();
-        request.setText("test text");
-        request.setExpiryTime(60);
+    @Captor
+    private ArgumentCaptor<String> textCaptor;
 
-        when(textBlockService.createTextBlock(anyString(), anyLong())).thenReturn("testHash");
-
-        mockMvc.perform(post("/api/text-blocks")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"text\":\"test text\", \"expiryTime\":60}"))
-                .andExpect(status().isOk())
-                .andExpect(content().string("testHash"));
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.initMocks(this);
     }
 
-    @Test
-    public void getTextBlock() throws Exception {
-        TextBlock textBlock = new TextBlock();
-        textBlock.setHash("testHash");
-        textBlock.setText("test text");
+    @RepeatedTest(5)
+    public void testCreateTextBlock() {
+        TextBlockRequest request = new TextBlockRequest();
+        request.setText("Test text");
 
-        when(textBlockService.getTextBlock("testHash")).thenReturn(textBlock);
+        String expectedHash = generateHash(request.getText());
 
-        mockMvc.perform(get("/api/text-blocks/testHash"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.hash").value("testHash"))
-                .andExpect(jsonPath("$.text").value("test text"));
+        when(textBlockService.createTextBlock(request.getText())).thenReturn(expectedHash);
+
+        ResponseEntity<String> response = textBlockController.createTextBlock(request);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(expectedHash, response.getBody());
+    }
+
+    private String generateHash(String input) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hashBytes = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+            return Base64.getUrlEncoder().withoutPadding().encodeToString(hashBytes).substring(0, 8);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @RepeatedTest(5)
+    public void testGetTextBlock() {
+        String testHash = "testHash";
+        TextBlock expectedTextBlock = new TextBlock();
+        expectedTextBlock.setHash(testHash);
+        expectedTextBlock.setText("Test text");
+
+        when(textBlockService.getTextBlock(testHash)).thenReturn(expectedTextBlock);
+
+        ResponseEntity<TextBlock> response = textBlockController.getTextBlock(testHash);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(testHash, response.getBody().getHash());
+        assertEquals("Test text", response.getBody().getText());
+
+        verify(textBlockService).getTextBlock(textCaptor.capture());
+        assertEquals(testHash, textCaptor.getValue());
     }
 }

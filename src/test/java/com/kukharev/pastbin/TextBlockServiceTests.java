@@ -6,13 +6,12 @@ import com.kukharev.pastbin.exception.ResourceNotFoundException;
 import com.kukharev.pastbin.service.HashGeneratorService;
 import com.kukharev.pastbin.service.TextBlockService;
 import org.junit.jupiter.api.RepeatedTest;
-import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import java.time.LocalDateTime;
+import java.security.NoSuchAlgorithmException;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -32,7 +31,7 @@ public class TextBlockServiceTests {
     private TextBlockService textBlockService;
 
     @RepeatedTest(10)
-    public void testCreateTextBlock() {
+    public void testCreateTextBlock() throws NoSuchAlgorithmException {
         String text = "Test text";
         String hash = "testHash";
 
@@ -53,9 +52,7 @@ public class TextBlockServiceTests {
         textBlock.setText("Test text");
 
         when(textBlockRepository.findByHash(hash)).thenReturn(Optional.of(textBlock));
-
         TextBlock result = textBlockService.getTextBlock(hash);
-
         assertEquals(hash, result.getHash());
         assertEquals("Test text", result.getText());
     }

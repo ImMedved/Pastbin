@@ -12,11 +12,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import java.time.LocalDateTime;
+import java.security.NoSuchAlgorithmException;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -33,13 +32,12 @@ public class TextBlockServiceRunningTests {
     private TextBlockService textBlockService;
 
     @Test
-    public void testCreateTextBlock() {
+    public void testCreateTextBlock() throws NoSuchAlgorithmException {
         String text = "Test text";
         String hash = "testHash";
 
         when(hashGeneratorService.generateHash(anyString())).thenReturn(hash);
 
-        // Capture the argument passed to save method
         ArgumentCaptor<TextBlock> captor = ArgumentCaptor.forClass(TextBlock.class);
 
         String resultHash = textBlockService.createTextBlock(text);
@@ -47,8 +45,8 @@ public class TextBlockServiceRunningTests {
         assertEquals(hash, resultHash);
         verify(textBlockRepository, times(1)).save(captor.capture());  // Capture the argument
 
-        TextBlock savedTextBlock = captor.getValue();  // Retrieve the captured value
-        assertNotNull(savedTextBlock);  // Ensure savedTextBlock is not null
+        TextBlock savedTextBlock = captor.getValue();
+        assertNotNull(savedTextBlock);
         assertEquals(text, savedTextBlock.getText());
         assertEquals(hash, savedTextBlock.getHash());
     }
@@ -72,9 +70,7 @@ public class TextBlockServiceRunningTests {
     @Test
     public void testGetTextBlockNotFound() {
         String hash = "nonExistentHash";
-
         when(textBlockRepository.findByHash(hash)).thenReturn(Optional.empty());
-
         assertThrows(ResourceNotFoundException.class, () -> textBlockService.getTextBlock(hash));
     }
 }

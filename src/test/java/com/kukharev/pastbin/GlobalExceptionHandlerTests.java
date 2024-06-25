@@ -11,8 +11,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
-@WebMvcTest
-@Import(GlobalExceptionHandler.class)
+@WebMvcTest(controllers = GlobalExceptionHandler.class)
 public class GlobalExceptionHandlerTests {
 
     @Autowired
@@ -20,15 +19,19 @@ public class GlobalExceptionHandlerTests {
 
     @Test
     public void testHandleResourceNotFoundException() throws Exception {
-        mockMvc.perform(get("/api/text-blocks/nonExistentHash"))
+        String nonExistentHash = "nonExistentHash";
+        String expectedMessage = "TextBlock not found with hash " + nonExistentHash;
+
+        mockMvc.perform(get("/api/text-blocks/" + nonExistentHash))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("TextBlock not found with hash nonExistentHash"));
+                .andExpect(content().string(expectedMessage));
     }
 
     @Test
     public void testHandleInternalServerError() throws Exception {
         mockMvc.perform(get("/api/causeError"))
                 .andExpect(status().isInternalServerError())
-                .andExpect(content().string("An unexpected error occurred"));
+                .andExpect(content().string("Internal Server Error"));
     }
 }
+

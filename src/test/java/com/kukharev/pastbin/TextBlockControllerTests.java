@@ -6,7 +6,6 @@ import com.kukharev.pastbin.model.TextBlock;
 import com.kukharev.pastbin.service.TextBlockService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.RepeatedTest;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -39,7 +38,7 @@ public class TextBlockControllerTests {
     }
 
     @RepeatedTest(5)
-    public void testCreateTextBlock() {
+    public void testCreateTextBlock() throws NoSuchAlgorithmException {
         TextBlockRequest request = new TextBlockRequest();
         request.setText("Test text");
 

@@ -7,10 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 
 import java.util.Map;
 
@@ -31,42 +28,49 @@ public class PastbinApplicationIntegrationTests {
     @Test
     public void testCreateAndGetTextBlock() {
         String text = "Hello, world!";
-        long expiryTime = 60L;
 
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Content-Type", "application/json");
+        headers.setContentType(MediaType.APPLICATION_JSON);
 
-        Map<String, Object> request = Map.of("text", text, "expiryTime", expiryTime);
+        Map<String, Object> request = Map.of("text", text);
 
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
 
-        ResponseEntity<String> createResponse = restTemplate.postForEntity("http://localhost:" + port + "/api/text-blocks", entity, String.class);
+        ResponseEntity<String> createResponse = restTemplate.postForEntity(getTextBlocksUrl(), entity, String.class);
         assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         String hash = createResponse.getBody();
+        assertThat(hash).isNotNull();
 
-        ResponseEntity<TextBlock> getResponse = restTemplate.getForEntity("http://localhost:" + port + "/api/text-blocks/" + hash, TextBlock.class);
+        ResponseEntity<TextBlock> getResponse = restTemplate.getForEntity(getTextBlockUrl(hash), TextBlock.class);
         assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(getResponse.getBody()).isNotNull();
         assertThat(getResponse.getBody().getText()).isEqualTo(text);
 
-        // Verify expiration
-        ResponseEntity<String> expiredResponse = restTemplate.getForEntity("http://localhost:" + port + "/api/text-blocks/" + hash, String.class);
+        ResponseEntity<String> expiredResponse = restTemplate.getForEntity(getTextBlockUrl(hash), String.class);
         assertThat(expiredResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
     @Test
     public void testCreateTextBlockInvalidInput() {
         String text = "";
-        long expiryTime = -1L;
 
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Content-Type", "application/json");
+        headers.setContentType(MediaType.APPLICATION_JSON);
 
-        Map<String, Object> request = Map.of("text", text, "expiryTime", expiryTime);
+        Map<String, Object> request = Map.of("text", text);
 
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
 
-        ResponseEntity<String> createResponse = restTemplate.postForEntity("http://localhost:" + port + "/api/text-blocks", entity, String.class);
-        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        ResponseEntity<String> createResponse = restTemplate.postForEntity(getTextBlocksUrl(), entity, String.class);
+        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST); // Ожидаемый статус 400 BAD_REQUEST
+    }
+
+    private String getTextBlocksUrl() {
+        return "http://localhost:" + port + "/api/text-blocks";
+    }
+
+    private String getTextBlockUrl(String hash) {
+        return "http://localhost:" + port + "/api/text-blocks/" + hash;
     }
 }
+

@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.NoSuchAlgorithmException;
+
 @RestController
 @RequestMapping("/api/text-blocks")
 public class TextBlockController {
@@ -14,8 +16,11 @@ public class TextBlockController {
     private TextBlockService textBlockService;
 
     @PostMapping
-    public ResponseEntity<String> createTextBlock(@RequestBody TextBlockRequest textBlockRequest) {
-        String hash = textBlockService.createTextBlock(textBlockRequest.getText(), textBlockRequest.getExpiryTime());
+    public ResponseEntity<String> createTextBlock(@RequestBody TextBlockRequest textBlockRequest) throws NoSuchAlgorithmException {
+        if (textBlockRequest.getText() == null || textBlockRequest.getText().isEmpty())
+            return ResponseEntity.badRequest().build();
+
+        String hash = textBlockService.createTextBlock(textBlockRequest.getText());
         return ResponseEntity.ok(hash);
     }
 

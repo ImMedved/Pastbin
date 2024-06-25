@@ -7,6 +7,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 
 @Service
@@ -19,7 +20,7 @@ public class TextBlockService {
     private HashGeneratorService hashGeneratorService;
 
     @Transactional
-    public String createTextBlock(String text) {
+    public String createTextBlock(String text) throws NoSuchAlgorithmException {
         TextBlock textBlock = new TextBlock();
         textBlock.setText(text);
         textBlock.setCreatedAt(LocalDateTime.now());

@@ -1,40 +1,33 @@
-version: '3.8'
+version: '3.7'
 
 services:
-  postgres:
-    image: postgres:13
-    container_name: pastbin_postgres
+  mariadb:
+    image: mariadb:latest
+    container_name: mariadb
     environment:
-      POSTGRES_USER: yourUsername
-      POSTGRES_PASSWORD: yourPassword
-      POSTGRES_DB: pastbin
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: pastbin_db
+      MYSQL_USER: test
+      MYSQL_PASSWORD: yourPassword
     ports:
-      - "5432:5432"
+      - "3306:3306"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - db_data:/var/lib/mysql
 
-  redis:
-    image: redis:latest
-    container_name: pastbin_redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-
-  pastbin:
-    build: .
-    container_name: pastbin_app
+  pastbin-app:
+    image: pastbin-app:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb:3306/pastbin_db
+      SPRING_DATASOURCE_USERNAME: test
+      SPRING_DATASOURCE_PASSWORD: yourPassword
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.mariadb.jdbc.Driver
     ports:
       - "8080:8080"
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/pastbin
-      SPRING_DATASOURCE_USERNAME: yourUsername
-      SPRING_DATASOURCE_PASSWORD: yourPassword
-      SPRING_REDIS_HOST: redis
     depends_on:
-      - postgres
-      - redis
+      - mariadb
 
 volumes:
-  postgres_data:
-  redis_data:
+  db_data:

@@ -1,0 +1,11 @@
+spring:
+  datasource:
+    url: jdbc:mariadb://localhost:3306/pastbin_db?allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
+    username: root
+    password: ImM3dv3d
+    driver-class-name: org.mariadb.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
